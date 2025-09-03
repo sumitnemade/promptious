@@ -117,3 +117,7 @@ jobs:
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to VS Code Marketplace
+        if: steps.tag-check.outputs.exists == 'false'
+        run: npx @vscode/vsce publish -p ${{ secrets.VSCE_PAT }}
