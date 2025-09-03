@@ -1,0 +1,53 @@
+# Source files
+src/**
+*.ts
+*.ts.map
+
+# Test files
+test/**
+**/*.test.js
+**/*.test.js.map
+**/*.spec.js
+**/*.spec.js.map
+
+# Development files
+.vscode/**
+.vscode-test/**
+node_modules/**
+.git/**
+.gitignore
+.gitattributes
+
+# Build artifacts
+out/test/**
+*.log
+*.tmp
+
+# Documentation (keep README.md)
+DEBUGGING.md
+DEPLOYMENT.md
+QUICKSTART.md
+
+# Scripts
+scripts/**
+install.sh
+install-manual.sh
+package-manual.sh
+
+# Coverage reports
+coverage/**
+.nyc_output/**
+
+# IDE files
+.vscode/settings.json
+.vscode/tasks.json
+.vscode/launch.json
+.vscode/extensions.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Package files
+package-lock.json
+yarn.lock

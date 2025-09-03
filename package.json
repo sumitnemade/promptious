@@ -1,0 +1,179 @@
+{
+  "name": "promptious-optimizer",
+  "displayName": "Promptious Prompt Optimizer",
+  "description": "AI-powered prompt optimization using advanced prompt engineering techniques",
+  "version": "1.0.0",
+  "publisher": "promptious",
+  "author": "Promptious Team",
+  "email": "nemadesumit@gmail.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sumitnemade/promptious"
+  },
+  "homepage": "https://github.com/sumitnemade/promptious",
+  "bugs": {
+    "url": "https://github.com/sumitnemade/promptious/issues"
+  },
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Other",
+    "Machine Learning",
+    "Snippets"
+  ],
+  "keywords": [
+    "ai",
+    "prompt",
+    "optimization",
+    "openai",
+    "gpt",
+    "prompt-engineering"
+  ],
+  "activationEvents": [
+    "onCommand:promptious.optimizePrompt",
+    "onCommand:promptious.optimizeSelection",
+    "onCommand:promptious.showHistory",
+    "onCommand:promptious.configureSettings",
+    "onCommand:promptious.clearHistory"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "promptious.optimizePrompt",
+        "title": "Optimize Prompt",
+        "category": "Promptious"
+      },
+      {
+        "command": "promptious.optimizeSelection",
+        "title": "Optimize Selected Text",
+        "category": "Promptious"
+      },
+      {
+        "command": "promptious.showHistory",
+        "title": "Show Optimization History",
+        "category": "Promptious"
+      },
+      {
+        "command": "promptious.configureSettings",
+        "title": "Configure Settings",
+        "category": "Promptious"
+      },
+      {
+        "command": "promptious.clearHistory",
+        "title": "Clear Optimization History",
+        "category": "Promptious"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "when": "editorHasSelection",
+          "command": "promptious.optimizeSelection",
+          "group": "promptious"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "promptious.optimizePrompt",
+          "when": "editorTextFocus"
+        },
+        {
+          "command": "promptious.optimizeSelection",
+          "when": "editorHasSelection"
+        },
+        {
+          "command": "promptious.showHistory"
+        },
+        {
+          "command": "promptious.configureSettings"
+        },
+        {
+          "command": "promptious.clearHistory"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Promptious Optimizer",
+      "properties": {
+        "promptious.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "OpenAI API key for prompt optimization"
+        },
+        "promptious.baseUrl": {
+          "type": "string",
+          "default": "http://localhost:8000",
+          "description": "Promptious backend base URL"
+        },
+        "promptious.debug": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable debug logging"
+        },
+        "promptious.defaultTechniques": {
+          "type": "array",
+          "default": [
+            "zero_shot",
+            "few_shot",
+            "chain_of_thought"
+          ],
+          "description": "Default optimization techniques to apply",
+          "items": {
+            "type": "string",
+            "enum": [
+              "zero_shot",
+              "few_shot",
+              "chain_of_thought",
+              "meta_prompting",
+              "self_consistency",
+              "generate_knowledge"
+            ]
+          }
+        },
+        "promptious.autoOptimize": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically optimize prompts when typing"
+        }
+      }
+    },
+    "keybindings": [
+      {
+        "command": "promptious.optimizeSelection",
+        "key": "ctrl+shift+p ctrl+o",
+        "mac": "cmd+shift+p cmd+o",
+        "when": "editorHasSelection"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js",
+    "package": "vsce package",
+    "package-legacy": "npx vsce@1.95.0 package",
+    "package-manual": "./package-manual.sh"
+  },
+  "devDependencies": {
+    "@types/glob": "^9.0.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "18.x",
+    "@types/vscode": "^1.74.0",
+    "@typescript-eslint/eslint-plugin": "^5.45.0",
+    "@typescript-eslint/parser": "^5.45.0",
+    "@vscode/test-electron": "^2.2.0",
+    "eslint": "^8.28.0",
+    "glob": "^10.0.0",
+    "mocha": "^10.0.0",
+    "typescript": "^4.9.4",
+    "vsce": "^1.103.1"
+  },
+  "dependencies": {
+    "axios": "^0.27.2"
+  }
+}
