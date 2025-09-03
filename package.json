@@ -2,7 +2,7 @@
   "name": "promptious-optimizer",
   "displayName": "Promptious Prompt Optimizer",
   "description": "AI-powered prompt optimization using advanced prompt engineering techniques",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "publisher": "sumitdev",
   "icon": "images/icon.png",
   "author": "Promptious Team",
@@ -32,7 +32,7 @@
     "prompt-engineering"
   ],
   "activationEvents": [
-    "*"
+    "onStartupFinished"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -55,6 +55,11 @@
       {
         "command": "promptious.configureSettings",
         "title": "Configure Settings",
+        "category": "Promptious"
+      },
+      {
+        "command": "promptious.testLightbulb",
+        "title": "Test Lightbulb",
         "category": "Promptious"
       },
       {

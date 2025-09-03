@@ -38,12 +38,22 @@ export function activate(context: vscode.ExtensionContext) {
     console.log('Promptious Optimizer extension is now active!');
     console.log('Extension context:', context.extension.id);
 
-    // Create status bar item
-    const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+    // Create status bar item with higher priority
+    const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 1000);
     statusBarItem.text = "$(lightbulb) Promptious";
     statusBarItem.tooltip = "Click to optimize prompt";
     statusBarItem.command = 'promptious.optimizePrompt';
-    statusBarItem.show();
+
+    // Show status bar item with a small delay to ensure VS Code is ready
+    setTimeout(() => {
+        statusBarItem.show();
+        console.log('Status bar item shown after delay');
+    }, 100);
+
+    console.log('Status bar item created');
+    console.log('Status bar item text:', statusBarItem.text);
+    console.log('Status bar item command:', statusBarItem.command);
+    console.log('Status bar item priority:', 1000);
 
     // Log activation for debugging
     console.log('Promptious Optimizer extension activated successfully');
@@ -81,6 +91,8 @@ export function activate(context: vscode.ExtensionContext) {
         }
     );
 
+    console.log('Code action provider registered');
+
     // Store optimization history with size limit
     const optimizationHistory: OptimizationHistory[] = [];
 
@@ -101,6 +113,12 @@ export function activate(context: vscode.ExtensionContext) {
         await configureSettings();
     });
 
+    // Add a test command to debug lightbulb issues
+    const testLightbulbCommand = vscode.commands.registerCommand('promptious.testLightbulb', async () => {
+        vscode.window.showInformationMessage('Lightbulb test command executed! Extension is working.');
+        console.log('Test lightbulb command executed');
+    });
+
     const clearHistoryCommand = vscode.commands.registerCommand('promptious.clearHistory', async () => {
         await clearOptimizationHistory(optimizationHistory);
     });
@@ -113,6 +131,7 @@ export function activate(context: vscode.ExtensionContext) {
         optimizeSelectionCommand,
         showHistoryCommand,
         configureSettingsCommand,
+        testLightbulbCommand,
         clearHistoryCommand
     );
 
@@ -663,11 +682,11 @@ function selectOptimalTechniques(originalPrompt: string, availableTechniques: st
 }
 
 function isPromptLike(text: string): boolean {
-    //     const trimmed = text.trim();
+    const trimmed = text.trim();
 
     // Show lightbulb for any reasonable text selection
     // This makes the extension more discoverable and useful
-    return true;
+    return trimmed.length >= 5 && trimmed.length <= 500;
 }
 
 export function deactivate() {
