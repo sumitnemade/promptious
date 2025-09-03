@@ -2,7 +2,7 @@
 
 All notable changes to the Promptious Prompt Optimizer extension will be documented in this file.
 
-## [1.1.0] - 2025-01-03
+## [1.0.3] - 2025-01-03
 
 ### 🚀 Major Features
 
