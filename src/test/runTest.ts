@@ -12,7 +12,20 @@ async function main() {
         const extensionTestsPath = path.resolve(__dirname, './suite/index');
 
         // Download VS Code, unzip it and run the integration test
-        await runTests({ extensionDevelopmentPath, extensionTestsPath });
+        await runTests({ 
+            extensionDevelopmentPath, 
+            extensionTestsPath,
+            // Add launch args for headless CI environments
+            launchArgs: [
+                '--disable-gpu',
+                '--disable-software-rasterizer',
+                '--disable-dev-shm-usage',
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-web-security',
+                '--disable-features=VizDisplayCompositor'
+            ]
+        });
     } catch (err) {
         console.error('Failed to run tests');
         process.exit(1);

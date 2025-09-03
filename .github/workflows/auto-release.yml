@@ -52,7 +52,7 @@ jobs:
 
       - name: Run tests
         if: steps.tag-check.outputs.exists == 'false'
-        run: npm test
+        run: npm run test:ci
 
       - name: Install vsce
         if: steps.tag-check.outputs.exists == 'false'

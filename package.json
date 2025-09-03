@@ -156,6 +156,7 @@
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
     "test": "node ./out/test/runTest.js",
+    "test:ci": "npm run compile && npm run lint",
     "package": "vsce package",
     "package-legacy": "npx vsce@1.95.0 package",
     "package-manual": "./package-manual.sh",
