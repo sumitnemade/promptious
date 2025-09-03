@@ -39,7 +39,7 @@ jobs:
         if: steps.tag-check.outputs.exists == 'false'
         uses: actions/setup-node@v4
         with:
-          node-version: "18"
+          node-version: "24.7.0"
           cache: "npm"
 
       - name: Install dependencies
@@ -56,11 +56,11 @@ jobs:
 
       - name: Install vsce
         if: steps.tag-check.outputs.exists == 'false'
-        run: npm install -g vsce
+        run: npm install -g @vscode/vsce
 
       - name: Package extension
         if: steps.tag-check.outputs.exists == 'false'
-        run: vsce package
+        run: npx @vscode/vsce package
 
       - name: Create Git Tag
         if: steps.tag-check.outputs.exists == 'false'
