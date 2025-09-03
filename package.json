@@ -2,7 +2,7 @@
   "name": "promptious-optimizer",
   "displayName": "Promptious Prompt Optimizer",
   "description": "AI-powered prompt optimization using advanced prompt engineering techniques",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "publisher": "sumitdev",
   "icon": "images/icon.png",
   "author": "Promptious Team",
@@ -26,7 +26,9 @@
     "prompt-engineering"
   ],
   "activationEvents": [
-    "onStartupFinished"
+    "onStartupFinished",
+    "onCommand:promptious.optimizePrompt",
+    "onCommand:promptious.optimizeSelection"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -42,6 +44,25 @@
         "category": "Promptious"
       }
     ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "promptious.optimizePrompt",
+          "when": "true"
+        },
+        {
+          "command": "promptious.optimizeSelection",
+          "when": "editorHasSelection"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "promptious.optimizeSelection",
+          "when": "editorHasSelection",
+          "group": "promptious"
+        }
+      ]
+    },
     "configuration": {
       "title": "Promptious Optimizer",
       "properties": {

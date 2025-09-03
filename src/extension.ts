@@ -12,7 +12,7 @@ export function activate(context: vscode.ExtensionContext) {
         statusBarItem.tooltip = "Click to optimize prompt";
         statusBarItem.command = 'promptious.optimizePrompt';
 
-        // Show with delay to ensure VS Code is ready
+        // Show with small delay to ensure VS Code is ready
         setTimeout(() => {
             try {
                 if (statusBarItem) {
@@ -22,8 +22,7 @@ export function activate(context: vscode.ExtensionContext) {
             } catch (error) {
                 console.error('Error showing status bar item:', error);
             }
-        }, 100); // Reduced delay for faster appearance
-
+        }, 200); // Small delay for VS Code startup
         console.log('Status bar item created successfully');
     } catch (error) {
         console.error('Error creating status bar item:', error);

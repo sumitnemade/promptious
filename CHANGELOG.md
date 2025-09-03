@@ -2,6 +2,31 @@
 
 All notable changes to the Promptious Prompt Optimizer extension will be documented in this file.
 
+## [1.0.6] - 2025-01-03
+
+### 🔧 Command Registration & Status Bar Fix
+
+- **Fixed Command Not Found Error**: Commands now register properly and are available immediately
+- **Fixed Status Bar Visibility**: Lightbulb now appears immediately when VS Code starts
+- **Dual Activation Events**: Uses both 'onStartupFinished' and 'onCommand' for best reliability
+- **Added Menu Integration**: Commands now appear in Command Palette and context menu
+- **Enhanced Discoverability**: Users can find commands through multiple entry points
+
+### 🚀 User Experience Improvements
+
+- **Immediate Status Bar**: Lightbulb appears on VS Code startup (not just after commands)
+- **Immediate Command Availability**: Commands work right after installation
+- **Context Menu Integration**: Right-click on selected text to optimize
+- **Command Palette Access**: Find commands easily through Ctrl+Shift+P
+- **Status Bar Integration**: Click status bar lightbulb for quick access
+
+### 🛠️ Technical Improvements
+
+- **Hybrid Activation**: Extension activates on startup AND when commands are used
+- **Better Error Handling**: Improved error messages and debugging
+- **Menu Configuration**: Added proper menu entries for all commands
+- **Optimized Timing**: 200ms delay for status bar to ensure VS Code readiness
+
 ## [1.0.5] - 2025-01-03
 
 ### 🔧 Status Bar Visibility Fix
