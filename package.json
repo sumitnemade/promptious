@@ -2,8 +2,9 @@
   "name": "promptious-optimizer",
   "displayName": "Promptious Prompt Optimizer",
   "description": "AI-powered prompt optimization using advanced prompt engineering techniques",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publisher": "sumitdev",
+  "icon": "images/icon.png",
   "author": "Promptious Team",
   "email": "nemadesumit@gmail.com",
   "repository": {
