@@ -6,6 +6,10 @@ on:
       - 'v*'
   workflow_dispatch:
 
+permissions:
+  contents: write
+  packages: write
+
 jobs:
   build-and-release:
     runs-on: ubuntu-latest
@@ -13,11 +17,13 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
       
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '24.7.0'
         cache: 'npm'
         
     - name: Install dependencies
@@ -27,13 +33,13 @@ jobs:
       run: npm run compile
       
     - name: Run tests
-      run: npm test
+      run: npm run test:ci
       
     - name: Install vsce
-      run: npm install -g vsce
+      run: npm install -g @vscode/vsce
       
     - name: Package extension
-      run: vsce package
+      run: npx @vscode/vsce package
       
     - name: Create Release
       uses: softprops/action-gh-release@v1
