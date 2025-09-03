@@ -2,7 +2,7 @@
   "name": "promptious-optimizer",
   "displayName": "Promptious Prompt Optimizer",
   "description": "AI-powered prompt optimization using advanced prompt engineering techniques",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "publisher": "sumitdev",
   "icon": "images/icon.png",
   "author": "Promptious Team",
@@ -66,26 +66,22 @@
     "menus": {
       "editor/context": [
         {
-          "when": "editorHasSelection",
           "command": "promptious.optimizeSelection",
           "group": "promptious"
         }
       ],
       "editor/lightbulb": [
         {
-          "when": "editorHasSelection",
           "command": "promptious.optimizeSelection",
           "group": "promptious"
         }
       ],
       "commandPalette": [
         {
-          "command": "promptious.optimizePrompt",
-          "when": "editorTextFocus"
+          "command": "promptious.optimizePrompt"
         },
         {
-          "command": "promptious.optimizeSelection",
-          "when": "editorHasSelection"
+          "command": "promptious.optimizeSelection"
         },
         {
           "command": "promptious.showHistory"
@@ -104,37 +100,64 @@
         "promptious.apiKey": {
           "type": "string",
           "default": "",
-          "description": "OpenAI API key for prompt optimization"
+          "description": "🔑 OpenAI API Key",
+          "markdownDescription": "Your OpenAI API key for prompt optimization. Get one at [platform.openai.com](https://platform.openai.com/api-keys). This is required for the extension to work."
         },
-        "promptious.debug": {
-          "type": "boolean",
-          "default": false,
-          "description": "Enable debug logging"
-        },
-        "promptious.defaultTechniques": {
-          "type": "array",
-          "default": [
-            "zero_shot",
-            "few_shot",
-            "chain_of_thought"
+        "promptious.optimizationLevel": {
+          "type": "string",
+          "default": "smart",
+          "description": "🎯 Optimization Level",
+          "markdownDescription": "How aggressively to optimize prompts:\n- **Smart**: Automatically selects best techniques (recommended)\n- **Conservative**: Uses only basic techniques\n- **Aggressive**: Applies maximum optimization",
+          "enum": [
+            "smart",
+            "conservative",
+            "aggressive"
           ],
-          "description": "Default optimization techniques to apply",
-          "items": {
-            "type": "string",
-            "enum": [
-              "zero_shot",
-              "few_shot",
-              "chain_of_thought",
-              "meta_prompting",
-              "self_consistency",
-              "generate_knowledge"
-            ]
-          }
+          "enumDescriptions": [
+            "Automatically select optimal techniques based on prompt analysis",
+            "Use only basic techniques (Zero-shot, Role Definition)",
+            "Apply maximum optimization with all relevant techniques"
+          ]
         },
-        "promptious.autoOptimize": {
+        "promptious.maxTechniques": {
+          "type": "number",
+          "default": 4,
+          "minimum": 1,
+          "maximum": 8,
+          "description": "🔢 Maximum Techniques",
+          "markdownDescription": "Maximum number of optimization techniques to apply (1-8). Higher numbers create more comprehensive but longer prompts."
+        },
+        "promptious.autoCopy": {
+          "type": "boolean",
+          "default": true,
+          "description": "📋 Auto Copy to Clipboard",
+          "markdownDescription": "Automatically copy optimized prompts to clipboard. Disable if you prefer manual copying."
+        },
+        "promptious.showNotifications": {
+          "type": "boolean",
+          "default": true,
+          "description": "🔔 Show Notifications",
+          "markdownDescription": "Show success notifications when prompts are optimized. Disable for a quieter experience."
+        },
+        "promptious.debugMode": {
           "type": "boolean",
           "default": false,
-          "description": "Automatically optimize prompts when typing"
+          "description": "🐛 Debug Mode",
+          "markdownDescription": "Enable debug logging to help troubleshoot issues. Check the Output panel → 'Promptious Optimizer' for logs."
+        },
+        "promptious.preferredModel": {
+          "type": "string",
+          "default": "gpt-3.5-turbo",
+          "description": "🤖 AI Model",
+          "markdownDescription": "OpenAI model to use for optimization:\n- **gpt-3.5-turbo**: Fast and cost-effective (recommended)\n- **gpt-4**: Higher quality but slower and more expensive",
+          "enum": [
+            "gpt-3.5-turbo",
+            "gpt-4"
+          ],
+          "enumDescriptions": [
+            "Fast and cost-effective optimization",
+            "Higher quality optimization (slower, more expensive)"
+          ]
         }
       }
     },
@@ -142,8 +165,7 @@
       {
         "command": "promptious.optimizeSelection",
         "key": "ctrl+shift+p ctrl+o",
-        "mac": "cmd+shift+p cmd+o",
-        "when": "editorHasSelection"
+        "mac": "cmd+shift+p cmd+o"
       }
     ]
   },
