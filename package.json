@@ -32,11 +32,7 @@
     "prompt-engineering"
   ],
   "activationEvents": [
-    "onCommand:promptious.optimizePrompt",
-    "onCommand:promptious.optimizeSelection",
-    "onCommand:promptious.showHistory",
-    "onCommand:promptious.configureSettings",
-    "onCommand:promptious.clearHistory"
+    "*"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -75,6 +71,13 @@
           "group": "promptious"
         }
       ],
+      "editor/lightbulb": [
+        {
+          "when": "editorHasSelection",
+          "command": "promptious.optimizeSelection",
+          "group": "promptious"
+        }
+      ],
       "commandPalette": [
         {
           "command": "promptious.optimizePrompt",
@@ -102,11 +105,6 @@
           "type": "string",
           "default": "",
           "description": "OpenAI API key for prompt optimization"
-        },
-        "promptious.baseUrl": {
-          "type": "string",
-          "default": "http://localhost:8000",
-          "description": "Promptious backend base URL"
         },
         "promptious.debug": {
           "type": "boolean",

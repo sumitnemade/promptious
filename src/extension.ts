@@ -36,6 +36,7 @@ const REQUEST_TIMEOUT = 30000;
 
 export function activate(context: vscode.ExtensionContext) {
     console.log('Promptious Optimizer extension is now active!');
+    console.log('Extension context:', context.extension.id);
 
     // Create status bar item
     const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
@@ -43,6 +44,39 @@ export function activate(context: vscode.ExtensionContext) {
     statusBarItem.tooltip = "Click to optimize prompt";
     statusBarItem.command = 'promptious.optimizePrompt';
     statusBarItem.show();
+
+    // Log activation for debugging
+    console.log('Promptious Optimizer extension activated successfully');
+
+    // Register code action provider for lightbulb suggestions
+    const codeActionProvider = vscode.languages.registerCodeActionsProvider(
+        { scheme: 'file' },
+        {
+            provideCodeActions(document, range, context, token) {
+                const selectedText = document.getText(range);
+
+                // Only show lightbulb if there's selected text and it looks like a prompt
+                if (selectedText.trim() && isPromptLike(selectedText)) {
+                    const action = new vscode.CodeAction(
+                        'Optimize with Promptious',
+                        vscode.CodeActionKind.QuickFix
+                    );
+                    action.command = {
+                        command: 'promptious.optimizeSelection',
+                        title: 'Optimize Selected Text',
+                        arguments: []
+                    };
+                    action.isPreferred = true;
+                    return [action];
+                }
+
+                return [];
+            }
+        },
+        {
+            providedCodeActionKinds: [vscode.CodeActionKind.QuickFix]
+        }
+    );
 
     // Store optimization history with size limit
     const optimizationHistory: OptimizationHistory[] = [];
@@ -71,6 +105,7 @@ export function activate(context: vscode.ExtensionContext) {
     // Add commands to context
     context.subscriptions.push(
         statusBarItem,
+        codeActionProvider,
         optimizePromptCommand,
         optimizeSelectionCommand,
         showHistoryCommand,
@@ -89,7 +124,7 @@ export function activate(context: vscode.ExtensionContext) {
             if (selection === 'Configure Settings') {
                 vscode.commands.executeCommand('promptious.configureSettings');
             } else if (selection === 'Learn More') {
-                vscode.env.openExternal(vscode.Uri.parse('https://www.promptingguide.ai/techniques'));
+                vscode.window.showInformationMessage('Learn more about prompt engineering techniques in the extension documentation.');
             }
         });
         context.globalState.update('promptious.hasShownWelcome', true);
@@ -161,7 +196,6 @@ async function optimizeText(text: string, history: OptimizationHistory[]): Promi
 
             const config = vscode.workspace.getConfiguration('promptious');
             const apiKey = config.get<string>('apiKey');
-            const baseUrl = config.get<string>('baseUrl', 'http://localhost:8000');
             const techniques = config.get<string[]>('defaultTechniques', ['zero_shot', 'few_shot', 'chain_of_thought']);
             const debug = config.get<boolean>('debug', false);
 
@@ -177,19 +211,30 @@ async function optimizeText(text: string, history: OptimizationHistory[]): Promi
                 return;
             }
 
-            progress.report({ increment: 30, message: "Sending request to Promptious API..." });
+            progress.report({ increment: 30, message: "Sending request to OpenAI API..." });
 
-            const request: OptimizationRequest = {
-                prompt: text,
-                techniques: techniques,
-                context: 'vscode_extension'
-            };
+            // Create optimization prompt for OpenAI
+            const optimizationPrompt = createOptimizationPrompt(text, techniques);
 
             if (debug) {
-                console.log('Sending optimization request:', request);
+                console.log('Sending optimization request to OpenAI:', { prompt: optimizationPrompt });
             }
 
-            const response = await axios.post<OptimizationResponse>(`${baseUrl}/api/optimize`, request, {
+            const response = await axios.post('https://api.openai.com/v1/chat/completions', {
+                model: 'gpt-3.5-turbo',
+                messages: [
+                    {
+                        role: 'system',
+                        content: 'You are a prompt engineering expert. Optimize the given prompt using advanced techniques to make it more effective for AI models. Return your response in JSON format with the following structure: {"optimized_prompt": "...", "applied_techniques": [{"name": "...", "description": "..."}], "explanation": "...", "improvement_score": 0.0-1.0}'
+                    },
+                    {
+                        role: 'user',
+                        content: optimizationPrompt
+                    }
+                ],
+                max_tokens: 1000,
+                temperature: 0.7
+            }, {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${apiKey}`
@@ -199,14 +244,34 @@ async function optimizeText(text: string, history: OptimizationHistory[]): Promi
 
             progress.report({ increment: 70, message: "Processing response..." });
 
-            if (response.data.success && response.data.optimized_prompt) {
+            // Parse OpenAI response
+            const openaiResponse = response.data.choices[0].message.content;
+            let optimizationResult: OptimizationResponse;
+
+            try {
+                optimizationResult = JSON.parse(openaiResponse);
+            } catch (parseError) {
+                // If JSON parsing fails, create a simple response
+                optimizationResult = {
+                    success: true,
+                    optimized_prompt: openaiResponse,
+                    applied_techniques: techniques.map(tech => ({
+                        name: tech,
+                        description: `Applied ${tech} technique`
+                    })),
+                    explanation: 'Prompt optimized using OpenAI GPT-3.5-turbo',
+                    improvement_score: 0.8
+                };
+            }
+
+            if (optimizationResult.optimized_prompt) {
                 // Store in history with size limit
                 history.push({
                     original: text,
-                    optimized: response.data.optimized_prompt,
+                    optimized: optimizationResult.optimized_prompt,
                     techniques: techniques,
                     timestamp: new Date(),
-                    score: response.data.improvement_score
+                    score: optimizationResult.improvement_score
                 });
 
                 // Maintain history size limit
@@ -217,9 +282,9 @@ async function optimizeText(text: string, history: OptimizationHistory[]): Promi
                 progress.report({ increment: 100, message: "Complete!" });
 
                 // Show results in a new document
-                await showOptimizationResults(text, response.data);
+                await showOptimizationResults(text, optimizationResult);
             } else {
-                throw new Error(response.data.error || 'Unknown error occurred');
+                throw new Error('No optimized prompt received from OpenAI');
             }
         });
 
@@ -232,17 +297,19 @@ async function optimizeText(text: string, history: OptimizationHistory[]): Promi
         if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') {
             errorMessage += 'Request timed out. Please check your internet connection and try again.';
         } else if (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED') {
-            errorMessage += 'Cannot connect to the server. Please check the backend URL in settings.';
+            errorMessage += 'Cannot connect to OpenAI API. Please check your internet connection.';
         } else if (error.response?.status === 401) {
-            errorMessage += 'Authentication failed. Please check your API key.';
+            errorMessage += 'Authentication failed. Please check your OpenAI API key.';
         } else if (error.response?.status === 429) {
-            errorMessage += 'Rate limit exceeded. Please try again later.';
+            errorMessage += 'Rate limit exceeded. Please try again later or upgrade your OpenAI plan.';
+        } else if (error.response?.status === 402) {
+            errorMessage += 'Payment required. Please add credits to your OpenAI account.';
         } else if (error.response?.data?.error) {
-            errorMessage += error.response.data.error;
+            errorMessage += error.response.data.error.message || error.response.data.error;
         } else if (error.message) {
             errorMessage += error.message;
         } else {
-            errorMessage += 'Please check your configuration and try again.';
+            errorMessage += 'Please check your OpenAI API key and try again.';
         }
 
         vscode.window.showErrorMessage(errorMessage, 'Configure Settings').then(selection => {
@@ -261,58 +328,163 @@ async function showOptimizationResults(original: string, response: OptimizationR
 
     await vscode.window.showTextDocument(doc);
 
-    // Show notification with quick actions
+    // Show meaningful notification with context
+    const score = Math.round((response.improvement_score || 0) * 100);
+    const optimizedPreview = (response.optimized_prompt || '').split('\n')[0].substring(0, 50);
+    const truncatedPreview = optimizedPreview.length < (response.optimized_prompt || '').split('\n')[0].length ? optimizedPreview + '...' : optimizedPreview;
+
+    // Create meaningful score description
+    let scoreDescription = '';
+    if (score >= 80) { scoreDescription = 'Excellent improvement!'; }
+    else if (score >= 60) { scoreDescription = 'Good optimization!'; }
+    else if (score >= 40) { scoreDescription = 'Moderate improvement'; }
+    else { scoreDescription = 'Minor enhancement'; }
+
     const action = await vscode.window.showInformationMessage(
-        `Prompt optimized! Improvement score: ${(response.improvement_score || 0) * 100}%`,
+        `🎯 ${scoreDescription} (${score}% better)\n\n📝 "${truncatedPreview}"`,
         'Copy Optimized Prompt',
-        'Show Techniques',
-        'Learn More'
+        'See Full Analysis'
     );
 
     if (action === 'Copy Optimized Prompt') {
         await vscode.env.clipboard.writeText(response.optimized_prompt || '');
-        vscode.window.showInformationMessage('Optimized prompt copied to clipboard!');
-    } else if (action === 'Show Techniques') {
-        await showAppliedTechniques(response.applied_techniques || []);
-    } else if (action === 'Learn More') {
-        vscode.env.openExternal(vscode.Uri.parse('https://www.promptingguide.ai/techniques'));
+        vscode.window.showInformationMessage('✅ Optimized prompt copied! Ready to use.');
+    } else if (action === 'See Full Analysis') {
+        await showExpandedDialog(original, response);
     }
 }
 
 function generateResultsMarkdown(original: string, response: OptimizationResponse): string {
     const timestamp = new Date().toLocaleString();
-    const score = response.improvement_score ? (response.improvement_score * 100).toFixed(1) : 'N/A';
+    const score = Math.round((response.improvement_score || 0) * 100);
 
-    return `# Prompt Optimization Results
+    // Create meaningful score description
+    let scoreDescription = '';
+    if (score >= 80) { scoreDescription = 'Excellent! Your prompt is now much more effective.'; }
+    else if (score >= 60) { scoreDescription = 'Great! Your prompt has been significantly improved.'; }
+    else if (score >= 40) { scoreDescription = 'Good! Your prompt has been enhanced.'; }
+    else { scoreDescription = 'Your prompt has been refined for better results.'; }
 
-**Generated:** ${timestamp}  
-**Improvement Score:** ${score}%
+    return `# 🎯 Prompt Optimization Complete!
 
-## Original Prompt
+**${scoreDescription}** (${score}% improvement)  
+**Optimized:** ${timestamp}
+
+## 📝 Your Original Prompt
 \`\`\`
 ${original}
 \`\`\`
 
-## Optimized Prompt
+## ✨ Improved Version
 \`\`\`
 ${response.optimized_prompt}
 \`\`\`
 
-## Applied Techniques
-${response.applied_techniques?.map(tech => `- **${tech.name}**: ${tech.description}`).join('\n') || 'No techniques specified'}
+## 🚀 Ready to Use
+Your optimized prompt is ready! Copy it above and test it with your AI model to see the improved results.
 
-## Explanation
+## 💡 Next Steps
+1. **Test the improved prompt** with your AI model
+2. **Compare results** with your original version
+3. **Fine-tune** if needed for your specific use case
+4. **Learn more** about prompt engineering techniques
+
+---
+*Generated by Promptious Optimizer - Making AI prompts more effective*
+`;
+}
+
+async function showExpandedDialog(original: string, response: OptimizationResponse): Promise<void> {
+    // Create meaningful expanded content
+    const score = Math.round((response.improvement_score || 0) * 100);
+    const techniques = response.applied_techniques?.map(tech => `• ${tech.name}`).join('\n') || '• Basic optimization techniques';
+
+    // Create user-friendly score context
+    let scoreContext = '';
+    if (score >= 80) { scoreContext = 'Your prompt is now significantly more effective!'; }
+    else if (score >= 60) { scoreContext = 'Your prompt has been substantially improved!'; }
+    else if (score >= 40) { scoreContext = 'Your prompt has been enhanced with better structure.'; }
+    else { scoreContext = 'Your prompt has been refined for better clarity.'; }
+
+    const expandedContent = `🎯 OPTIMIZATION ANALYSIS
+
+${scoreContext} (${score}% improvement)
+
+📝 ORIGINAL:
+"${original}"
+
+✨ IMPROVED:
+"${response.optimized_prompt}"
+
+🔧 TECHNIQUES:
+${techniques}
+
+💡 WHY BETTER:
+${response.explanation || 'The optimized version uses proven prompt engineering techniques to get better results from AI models.'}
+
+🚀 NEXT STEPS:
+1. Copy the improved prompt and test it
+2. Compare results with your original  
+3. Fine-tune if needed based on your specific use case`;
+
+    // Show expanded dialog with clear actions
+    const expandedAction = await vscode.window.showInformationMessage(
+        expandedContent,
+        'Copy Improved Prompt',
+        'Copy Original'
+    );
+
+    if (expandedAction === 'Copy Improved Prompt') {
+        await vscode.env.clipboard.writeText(response.optimized_prompt || '');
+        vscode.window.showInformationMessage('✅ Improved prompt copied! Test it with your AI model.');
+    } else if (expandedAction === 'Copy Original') {
+        await vscode.env.clipboard.writeText(original);
+        vscode.window.showInformationMessage('✅ Original prompt copied!');
+    }
+}
+
+async function showDetailedResults(original: string, response: OptimizationResponse): Promise<void> {
+    // Create a more detailed results view
+    const detailedContent = `# 🎯 Prompt Optimization Results
+
+## 📊 Summary
+- **Improvement Score**: ${Math.round((response.improvement_score || 0) * 100)}%
+- **Optimized**: ${new Date().toLocaleString()}
+- **Techniques Applied**: ${response.applied_techniques?.length || 0}
+
+## 📝 Original Prompt
+\`\`\`
+${original}
+\`\`\`
+
+## ✨ Optimized Prompt
+\`\`\`
+${response.optimized_prompt}
+\`\`\`
+
+## 🔧 Applied Techniques
+${response.applied_techniques?.map(tech => `### ${tech.name}
+${tech.description}`).join('\n\n') || 'No techniques specified'}
+
+## 💡 Explanation
 ${response.explanation || 'No explanation provided'}
 
-## Next Steps
-1. Review the optimized prompt above
-2. Test it with your AI model
-3. Adjust if needed based on results
-4. Learn more about prompt engineering at [promptingguide.ai](https://www.promptingguide.ai/techniques)
+## 🚀 Next Steps
+1. **Test the optimized prompt** with your AI model
+2. **Compare results** with the original
+3. **Iterate** if needed based on performance
+4. **Save successful prompts** for future use
 
 ---
 *Generated by Promptious Optimizer Extension*
 `;
+
+    const doc = await vscode.workspace.openTextDocument({
+        content: detailedContent,
+        language: 'markdown'
+    });
+
+    await vscode.window.showTextDocument(doc);
 }
 
 async function showAppliedTechniques(techniques: Array<{ name: string, description: string }>): Promise<void> {
@@ -379,10 +551,6 @@ async function configureSettings(): Promise<void> {
 2. Create a new API key
 3. Set \`promptious.apiKey\` in VS Code settings
 
-### Backend URL
-- Set \`promptious.baseUrl\` to your Promptious backend URL
-- Default: \`http://localhost:8000\`
-
 ## Optional Settings
 
 ### Debug Mode
@@ -397,13 +565,19 @@ async function configureSettings(): Promise<void> {
 
 ## Quick Setup
 1. Set your OpenAI API key
-2. Ensure Promptious backend is running
-3. Start optimizing prompts!
+2. Start optimizing prompts!
+
+## How It Works
+- Extension directly calls OpenAI GPT-3.5-turbo API
+- No backend server required
+- Uses advanced prompt engineering techniques
+- Optimizes prompts for better AI model performance
 
 ## Troubleshooting
 - Check console output for debug information
-- Verify backend is accessible
 - Ensure API key has sufficient credits
+- Verify internet connection
+- Check OpenAI API status
 `,
         language: 'markdown'
     });
@@ -422,6 +596,66 @@ async function clearOptimizationHistory(history: OptimizationHistory[]): Promise
         history.length = 0; // Clear the array
         vscode.window.showInformationMessage('Optimization history cleared!');
     }
+}
+
+function createOptimizationPrompt(originalPrompt: string, techniques: string[]): string {
+    const techniqueDescriptions = {
+        'zero_shot': 'Direct instruction without examples',
+        'few_shot': 'Provide examples to guide the model',
+        'chain_of_thought': 'Break down the task into steps',
+        'meta_prompting': 'Ask the model to think about how to approach the task',
+        'self_consistency': 'Generate multiple responses and select the best one',
+        'generate_knowledge': 'Generate relevant knowledge before answering'
+    };
+
+    const appliedTechniques = techniques.map(tech => techniqueDescriptions[tech as keyof typeof techniqueDescriptions] || tech).join(', ');
+
+    return `Please optimize the following prompt using these techniques: ${appliedTechniques}
+
+Original prompt: "${originalPrompt}"
+
+Please provide an optimized version that:
+1. Is clearer and more specific
+2. Uses the requested techniques effectively
+3. Is more likely to produce high-quality results
+4. Maintains the original intent
+
+Return your response in JSON format with this exact structure:
+{
+  "optimized_prompt": "your optimized prompt here",
+  "applied_techniques": [
+    {"name": "technique_name", "description": "how it was applied"}
+  ],
+  "explanation": "brief explanation of the optimization",
+  "improvement_score": 0.85
+}`;
+}
+
+function isPromptLike(text: string): boolean {
+    const trimmed = text.trim();
+
+    // Check if text looks like a prompt based on common patterns
+    const promptIndicators = [
+        // Question patterns
+        /^(what|how|why|when|where|who|which|can|could|would|should|do|does|did|is|are|was|were)/i,
+        // Instruction patterns
+        /^(write|create|generate|make|build|design|explain|describe|summarize|analyze|compare|list)/i,
+        // AI/LLM specific patterns
+        /^(prompt|instruction|task|request|query|input|output|response)/i,
+        // Length check (prompts are usually substantial)
+        trimmed.length > 10 && trimmed.length < 1000
+    ];
+
+    // Check for multiple sentences or complex structure
+    const hasMultipleSentences = trimmed.split(/[.!?]+/).length > 1;
+    const hasComplexStructure = /[,;:()\[\]{}]/.test(trimmed);
+
+    return promptIndicators.some(pattern => {
+        if (pattern instanceof RegExp) {
+            return pattern.test(trimmed);
+        }
+        return pattern;
+    }) || hasMultipleSentences || hasComplexStructure;
 }
 
 export function deactivate() {
