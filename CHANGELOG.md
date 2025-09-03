@@ -2,6 +2,21 @@
 
 All notable changes to the Promptious Prompt Optimizer extension will be documented in this file.
 
+## [1.0.5] - 2025-01-03
+
+### 🔧 Status Bar Visibility Fix
+
+- **Fixed Status Bar Display Issue**: Status bar lightbulb now appears immediately when VS Code starts
+- **Improved Activation Timing**: Changed from 'onCommand' to 'onStartupFinished' for better user experience
+- **Faster Appearance**: Reduced delay from 500ms to 100ms for quicker status bar item display
+- **Better User Experience**: Users can now see the extension is active without running commands first
+
+### 🚀 User Experience Improvements
+
+- **Immediate Visibility**: Extension status bar item is visible from VS Code startup
+- **No Command Dependency**: Status bar appears without needing to run any commands
+- **Consistent Presence**: Lightbulb icon always visible when extension is active
+
 ## [1.0.4] - 2025-01-03
 
 ### 🔧 Status Bar & Lightbulb Fixes

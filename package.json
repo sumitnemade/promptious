@@ -2,29 +2,23 @@
   "name": "promptious-optimizer",
   "displayName": "Promptious Prompt Optimizer",
   "description": "AI-powered prompt optimization using advanced prompt engineering techniques",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "publisher": "sumitdev",
   "icon": "images/icon.png",
   "author": "Promptious Team",
   "email": "nemadesumit@gmail.com",
   "repository": {
     "type": "git",
-    "url": "https://github.com/sumitnemade/promptious"
-  },
-  "homepage": "https://github.com/sumitnemade/promptious",
-  "bugs": {
-    "url": "https://github.com/sumitnemade/promptious/issues"
+    "url": "https://github.com/sumitdev/promptious-optimizer.git"
   },
   "engines": {
     "vscode": "^1.74.0"
   },
   "categories": [
-    "Other",
-    "Machine Learning",
-    "Snippets"
+    "Snippets",
+    "Machine Learning"
   ],
   "keywords": [
-    "ai",
     "prompt",
     "optimization",
     "openai",
@@ -46,133 +40,31 @@
         "command": "promptious.optimizeSelection",
         "title": "Optimize Selected Text",
         "category": "Promptious"
-      },
-      {
-        "command": "promptious.showHistory",
-        "title": "Show Optimization History",
-        "category": "Promptious"
-      },
-      {
-        "command": "promptious.configureSettings",
-        "title": "Configure Settings",
-        "category": "Promptious"
-      },
-      {
-        "command": "promptious.testLightbulb",
-        "title": "Test Lightbulb",
-        "category": "Promptious"
-      },
-      {
-        "command": "promptious.clearHistory",
-        "title": "Clear Optimization History",
-        "category": "Promptious"
       }
     ],
-    "menus": {
-      "editor/context": [
-        {
-          "command": "promptious.optimizeSelection",
-          "group": "promptious"
-        }
-      ],
-      "editor/lightbulb": [
-        {
-          "command": "promptious.optimizeSelection",
-          "group": "promptious"
-        }
-      ],
-      "commandPalette": [
-        {
-          "command": "promptious.optimizePrompt"
-        },
-        {
-          "command": "promptious.optimizeSelection"
-        },
-        {
-          "command": "promptious.showHistory"
-        },
-        {
-          "command": "promptious.configureSettings"
-        },
-        {
-          "command": "promptious.clearHistory"
-        }
-      ]
-    },
     "configuration": {
       "title": "Promptious Optimizer",
       "properties": {
         "promptious.apiKey": {
           "type": "string",
           "default": "",
-          "description": "🔑 OpenAI API Key",
-          "markdownDescription": "Your OpenAI API key for prompt optimization. Get one at [platform.openai.com](https://platform.openai.com/api-keys). This is required for the extension to work."
-        },
-        "promptious.optimizationLevel": {
-          "type": "string",
-          "default": "smart",
-          "description": "🎯 Optimization Level",
-          "markdownDescription": "How aggressively to optimize prompts:\n- **Smart**: Automatically selects best techniques (recommended)\n- **Conservative**: Uses only basic techniques\n- **Aggressive**: Applies maximum optimization",
-          "enum": [
-            "smart",
-            "conservative",
-            "aggressive"
-          ],
-          "enumDescriptions": [
-            "Automatically select optimal techniques based on prompt analysis",
-            "Use only basic techniques (Zero-shot, Role Definition)",
-            "Apply maximum optimization with all relevant techniques"
-          ]
-        },
-        "promptious.maxTechniques": {
-          "type": "number",
-          "default": 4,
-          "minimum": 1,
-          "maximum": 8,
-          "description": "🔢 Maximum Techniques",
-          "markdownDescription": "Maximum number of optimization techniques to apply (1-8). Higher numbers create more comprehensive but longer prompts."
+          "description": "OpenAI API Key",
+          "markdownDescription": "Your OpenAI API key for prompt optimization. Get one at [platform.openai.com](https://platform.openai.com/api-keys)"
         },
         "promptious.autoCopy": {
           "type": "boolean",
           "default": true,
-          "description": "📋 Auto Copy to Clipboard",
-          "markdownDescription": "Automatically copy optimized prompts to clipboard. Disable if you prefer manual copying."
+          "description": "Auto Copy to Clipboard",
+          "markdownDescription": "Automatically copy optimized prompts to clipboard"
         },
         "promptious.showNotifications": {
           "type": "boolean",
           "default": true,
-          "description": "🔔 Show Notifications",
-          "markdownDescription": "Show success notifications when prompts are optimized. Disable for a quieter experience."
-        },
-        "promptious.debugMode": {
-          "type": "boolean",
-          "default": false,
-          "description": "🐛 Debug Mode",
-          "markdownDescription": "Enable debug logging to help troubleshoot issues. Check the Output panel → 'Promptious Optimizer' for logs."
-        },
-        "promptious.preferredModel": {
-          "type": "string",
-          "default": "gpt-3.5-turbo",
-          "description": "🤖 AI Model",
-          "markdownDescription": "OpenAI model to use for optimization:\n- **gpt-3.5-turbo**: Fast and cost-effective (recommended)\n- **gpt-4**: Higher quality but slower and more expensive",
-          "enum": [
-            "gpt-3.5-turbo",
-            "gpt-4"
-          ],
-          "enumDescriptions": [
-            "Fast and cost-effective optimization",
-            "Higher quality optimization (slower, more expensive)"
-          ]
+          "description": "Show Notifications",
+          "markdownDescription": "Show success notifications when prompts are optimized"
         }
       }
-    },
-    "keybindings": [
-      {
-        "command": "promptious.optimizeSelection",
-        "key": "ctrl+shift+p ctrl+o",
-        "mac": "cmd+shift+p cmd+o"
-      }
-    ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
@@ -183,27 +75,17 @@
     "test": "node ./out/test/runTest.js",
     "test:ci": "npm run compile && npm run lint",
     "package": "npx @vscode/vsce package",
-    "package-legacy": "npx vsce@1.95.0 package",
-    "package-manual": "./package-manual.sh",
-    "bump:patch": "node scripts/bump-version.js patch",
-    "bump:minor": "node scripts/bump-version.js minor",
-    "bump:major": "node scripts/bump-version.js major"
+    "package-legacy": "npx vsce@1.95.0 package"
   },
   "devDependencies": {
-    "@types/glob": "^9.0.0",
-    "@types/mocha": "^10.0.10",
-    "@types/node": "24.x",
     "@types/vscode": "^1.74.0",
-    "@typescript-eslint/eslint-plugin": "^5.45.0",
-    "@typescript-eslint/parser": "^5.45.0",
-    "@vscode/test-electron": "^2.2.0",
-    "eslint": "^8.28.0",
-    "glob": "^10.0.0",
-    "mocha": "^10.0.0",
-    "typescript": "^4.9.4",
-    "@vscode/vsce": "^2.15.0"
+    "@types/node": "20.x",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "typescript": "^5.0.0"
   },
   "dependencies": {
-    "axios": "^0.27.2"
+    "axios": "^1.6.0"
   }
 }
