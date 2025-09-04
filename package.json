@@ -1,8 +1,8 @@
 {
   "name": "promptious-optimizer",
-  "displayName": "Promptious Prompt Optimizer",
+  "displayName": "Promptious Optimizer",
   "description": "AI-powered prompt optimization using advanced prompt engineering techniques",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "publisher": "sumitdev",
   "icon": "images/icon.png",
   "author": "Promptious Team",
@@ -26,9 +26,7 @@
     "prompt-engineering"
   ],
   "activationEvents": [
-    "onStartupFinished",
-    "onCommand:promptious.optimizePrompt",
-    "onCommand:promptious.optimizeSelection"
+    "onStartupFinished"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -42,6 +40,11 @@
         "command": "promptious.optimizeSelection",
         "title": "Optimize Selected Text",
         "category": "Promptious"
+      },
+      {
+        "command": "promptious.openSettings",
+        "title": "Open Settings",
+        "category": "Promptious"
       }
     ],
     "menus": {
@@ -53,6 +56,10 @@
         {
           "command": "promptious.optimizeSelection",
           "when": "editorHasSelection"
+        },
+        {
+          "command": "promptious.openSettings",
+          "when": "true"
         }
       ],
       "editor/context": [
@@ -83,6 +90,26 @@
           "default": true,
           "description": "Show Notifications",
           "markdownDescription": "Show success notifications when prompts are optimized"
+        },
+        "promptious.model": {
+          "type": "string",
+          "default": "gpt-3.5-turbo",
+          "description": "OpenAI Model",
+          "markdownDescription": "Choose the OpenAI model to use for prompt optimization",
+          "enum": [
+            "gpt-3.5-turbo",
+            "gpt-4",
+            "gpt-4-turbo-preview",
+            "gpt-4o",
+            "gpt-4o-mini"
+          ],
+          "enumDescriptions": [
+            "GPT-3.5 Turbo - Fast and cost-effective",
+            "GPT-4 - Most capable model",
+            "GPT-4 Turbo Preview - Latest GPT-4 with vision",
+            "GPT-4o - Optimized for speed and efficiency",
+            "GPT-4o Mini - Smaller, faster version of GPT-4o"
+          ]
         }
       }
     }
@@ -110,7 +137,5 @@
     "glob": "^10.4.5",
     "mocha": "^10.8.2"
   },
-  "dependencies": {
-    "axios": "^1.11.0"
-  }
+  "dependencies": {}
 }

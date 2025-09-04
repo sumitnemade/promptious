@@ -3,11 +3,11 @@ import * as vscode from 'vscode';
 
 suite('Extension Test Suite', () => {
     test('Extension should be present', () => {
-        assert.ok(vscode.extensions.getExtension('promptious.promptious-optimizer'));
+        assert.ok(vscode.extensions.getExtension('sumitdev.promptious-optimizer'));
     });
 
     test('Extension should activate', async () => {
-        const extension = vscode.extensions.getExtension('promptious.promptious-optimizer');
+        const extension = vscode.extensions.getExtension('sumitdev.promptious-optimizer');
         if (extension) {
             await extension.activate();
             assert.ok(extension.isActive);
@@ -18,9 +18,7 @@ suite('Extension Test Suite', () => {
         const commands = await vscode.commands.getCommands(true);
         assert.ok(commands.includes('promptious.optimizePrompt'));
         assert.ok(commands.includes('promptious.optimizeSelection'));
-        assert.ok(commands.includes('promptious.showHistory'));
-        assert.ok(commands.includes('promptious.configureSettings'));
-        assert.ok(commands.includes('promptious.clearHistory'));
+        assert.ok(commands.includes('promptious.openSettings'));
     });
 
     test('Configuration should be accessible', () => {
@@ -28,16 +26,14 @@ suite('Extension Test Suite', () => {
 
         // Test all configuration properties exist and have correct types
         const apiKey = config.get('apiKey');
-        const baseUrl = config.get('baseUrl');
-        const debug = config.get('debug');
-        const defaultTechniques = config.get('defaultTechniques');
-        const autoOptimize = config.get('autoOptimize');
+        const autoCopy = config.get('autoCopy');
+        const showNotifications = config.get('showNotifications');
+        const model = config.get('model');
 
         assert.strictEqual(typeof apiKey, 'string');
-        assert.strictEqual(typeof baseUrl, 'string');
-        assert.strictEqual(typeof debug, 'boolean');
-        assert.ok(Array.isArray(defaultTechniques));
-        assert.strictEqual(typeof autoOptimize, 'boolean');
+        assert.strictEqual(typeof autoCopy, 'boolean');
+        assert.strictEqual(typeof showNotifications, 'boolean');
+        assert.strictEqual(typeof model, 'string');
     });
 
     test('Status bar item should be created', () => {

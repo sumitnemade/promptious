@@ -1,73 +1,54 @@
 import * as vscode from 'vscode';
-import axios from 'axios';
 
 export function activate(context: vscode.ExtensionContext) {
     console.log('Promptious Optimizer extension activated');
+    console.log('Registering code action provider...');
 
-    // Create status bar item with error handling
-    let statusBarItem: vscode.StatusBarItem | undefined;
-    try {
-        statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-        statusBarItem.text = "$(lightbulb) Promptious";
-        statusBarItem.tooltip = "Click to optimize prompt";
-        statusBarItem.command = 'promptious.optimizePrompt';
+    // Create status bar item with lightbulb icon
+    const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+    statusBarItem.text = "$(lightbulb) Promptious";
+    statusBarItem.tooltip = "Click to optimize prompt";
+    statusBarItem.command = 'promptious.optimizePrompt';
+    statusBarItem.show();
+    console.log('Status bar item created and shown');
 
-        // Show with small delay to ensure VS Code is ready
-        setTimeout(() => {
-            try {
-                if (statusBarItem) {
-                    statusBarItem.show();
-                    console.log('Status bar item shown successfully');
-                }
-            } catch (error) {
-                console.error('Error showing status bar item:', error);
-            }
-        }, 200); // Small delay for VS Code startup
-        console.log('Status bar item created successfully');
-    } catch (error) {
-        console.error('Error creating status bar item:', error);
-    }
+    // Register code action provider for lightbulb suggestions
+    const codeActionProvider = vscode.languages.registerCodeActionsProvider(
+        '*', // All languages
+        {
+            provideCodeActions(document, range, context, token) {
+                try {
+                    const selectedText = document.getText(range);
+                    console.log('Code action provider called with text:', selectedText, 'length:', selectedText.length);
 
-    // Register code action provider with error handling
-    let codeActionProvider: vscode.Disposable | undefined;
-    try {
-        codeActionProvider = vscode.languages.registerCodeActionsProvider(
-            '*', // All languages
-            {
-                provideCodeActions(document, range, context, token) {
-                    try {
-                        const selectedText = document.getText(range);
-
-                        // Only show lightbulb for reasonable text selections
-                        if (selectedText.trim() && selectedText.length >= 5 && selectedText.length <= 500) {
-                            const action = new vscode.CodeAction(
-                                'Optimize with Promptious',
-                                vscode.CodeActionKind.QuickFix
-                            );
-                            action.command = {
-                                command: 'promptious.optimizeSelection',
-                                title: 'Optimize Selected Text',
-                                arguments: []
-                            };
-                            action.isPreferred = true;
-                            return [action];
-                        }
-
-                        return [];
-                    } catch (error) {
-                        console.error('Error in code action provider:', error);
-                        return [];
+                    // Show lightbulb for ANY text selection (no restrictions)
+                    if (selectedText.trim()) {
+                        console.log('Creating code action for text:', selectedText);
+                        const action = new vscode.CodeAction(
+                            'Optimize with Promptious',
+                            vscode.CodeActionKind.QuickFix
+                        );
+                        action.command = {
+                            command: 'promptious.optimizeSelection',
+                            title: 'Optimize Selected Text',
+                            arguments: []
+                        };
+                        action.isPreferred = true;
+                        return [action];
                     }
+
+                    console.log('No code action created - no text selected');
+                    return [];
+                } catch (error) {
+                    console.error('Error in code action provider:', error);
+                    return [];
                 }
-            },
-            {
-                providedCodeActionKinds: [vscode.CodeActionKind.QuickFix]
             }
-        );
-        console.log('Code action provider registered successfully');
-    } catch (error) {
-        console.error('Error registering code action provider:', error);
-    }
+        },
+        {
+            providedCodeActionKinds: [vscode.CodeActionKind.QuickFix]
+        }
+    );
 
     // Simple command registration with optimization logic
     const optimizePromptCommand = vscode.commands.registerCommand('promptious.optimizePrompt', async () => {
@@ -108,19 +89,99 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
-    // Add to subscriptions with error handling
-    const subscriptions = [optimizePromptCommand, optimizeSelectionCommand];
-    if (statusBarItem) {
-        subscriptions.push(statusBarItem);
-    }
-    if (codeActionProvider) {
-        subscriptions.push(codeActionProvider);
-    }
+    // Add settings command
+    const openSettingsCommand = vscode.commands.registerCommand('promptious.openSettings', async () => {
+        try {
+            await vscode.commands.executeCommand('workbench.action.openSettings', 'promptious');
+        } catch (error) {
+            console.error('Error opening settings:', error);
+            vscode.window.showErrorMessage('Error opening settings: ' + (error instanceof Error ? error.message : String(error)));
+        }
+    });
 
-    context.subscriptions.push(...subscriptions);
+    // Add to subscriptions
+    context.subscriptions.push(optimizePromptCommand, optimizeSelectionCommand, openSettingsCommand, codeActionProvider, statusBarItem);
 }
 
-// Optimization function with error handling
+// Smart prompt analysis function
+function analyzePromptType(prompt: string): { type: string; complexity: string; techniques: string[] } {
+    const lowerPrompt = prompt.toLowerCase();
+
+    // Determine prompt type
+    let type = 'general';
+    if (lowerPrompt.includes('code') || lowerPrompt.includes('program') || lowerPrompt.includes('function')) {
+        type = 'coding';
+    } else if (lowerPrompt.includes('explain') || lowerPrompt.includes('what is') || lowerPrompt.includes('how does')) {
+        type = 'explanation';
+    } else if (lowerPrompt.includes('write') || lowerPrompt.includes('create') || lowerPrompt.includes('generate')) {
+        type = 'creative';
+    } else if (lowerPrompt.includes('analyze') || lowerPrompt.includes('compare') || lowerPrompt.includes('evaluate')) {
+        type = 'analysis';
+    } else if (lowerPrompt.includes('translate') || lowerPrompt.includes('convert')) {
+        type = 'transformation';
+    }
+
+    // Determine complexity
+    let complexity = 'simple';
+    if (prompt.length > 200 || lowerPrompt.includes('step') || lowerPrompt.includes('process')) {
+        complexity = 'complex';
+    } else if (prompt.length > 100) {
+        complexity = 'medium';
+    }
+
+    // Select appropriate techniques based on type and complexity
+    let techniques: string[] = ['zero-shot', 'role-definition'];
+
+    if (complexity === 'complex') {
+        techniques.push('chain-of-thought');
+    }
+
+    if (type === 'coding' || type === 'creative') {
+        techniques.push('few-shot');
+    }
+
+    if (type === 'analysis' || type === 'explanation') {
+        techniques.push('meta-prompting');
+    }
+
+    if (complexity === 'complex' && (type === 'analysis' || type === 'explanation')) {
+        techniques.push('self-consistency');
+    }
+
+    return { type, complexity, techniques };
+}
+
+// Smart optimization prompt creation
+function createSmartOptimizationPrompt(originalPrompt: string, analysis: { type: string; complexity: string; techniques: string[] }): string {
+    const techniqueDescriptions = {
+        'zero-shot': 'Zero-shot Prompting: Direct instruction without examples',
+        'few-shot': 'Few-shot Prompting: Include 2-3 relevant examples',
+        'chain-of-thought': 'Chain-of-Thought: Add step-by-step reasoning structure',
+        'meta-prompting': 'Meta Prompting: Ask AI to think about its own process',
+        'self-consistency': 'Self-Consistency: Generate multiple perspectives',
+        'role-definition': 'Role Definition: Establish clear AI expertise and context'
+    };
+
+    const appliedTechniques = analysis.techniques.map(t => techniqueDescriptions[t as keyof typeof techniqueDescriptions]).join('\n- ');
+
+    return `You are an expert prompt engineer specializing in ${analysis.type} tasks. Optimize this ${analysis.complexity} prompt using these advanced techniques from the Prompt Engineering Guide:
+
+**Techniques to apply:**
+- ${appliedTechniques}
+
+**Original prompt:**
+${originalPrompt}
+
+**Optimization strategy:**
+1. **Analyze**: Identify the core intent and potential weaknesses
+2. **Enhance**: Apply the selected techniques appropriately
+3. **Structure**: Improve clarity, specificity, and logical flow
+4. **Validate**: Ensure the prompt will produce high-quality responses
+
+**Return ONLY the optimized prompt text, no explanations, no JSON, no quotes:**`;
+}
+
+// Optimization function using built-in fetch API
 async function optimizePrompt(originalPrompt: string): Promise<void> {
     try {
         // Get configuration
@@ -128,9 +189,16 @@ async function optimizePrompt(originalPrompt: string): Promise<void> {
         const apiKey = config.get<string>('apiKey');
         const autoCopy = config.get<boolean>('autoCopy', true);
         const showNotifications = config.get<boolean>('showNotifications', true);
+        const model = config.get<string>('model', 'gpt-3.5-turbo');
 
         if (!apiKey) {
-            vscode.window.showErrorMessage('OpenAI API key not configured. Please set it in settings.');
+            const action = await vscode.window.showErrorMessage(
+                'OpenAI API key not configured. Please set it in settings.',
+                'Open Settings'
+            );
+            if (action === 'Open Settings') {
+                await vscode.commands.executeCommand('workbench.action.openSettings', 'promptious');
+            }
             return;
         }
 
@@ -140,35 +208,47 @@ async function optimizePrompt(originalPrompt: string): Promise<void> {
             title: "Optimizing prompt...",
             cancellable: false
         }, async (progress) => {
-            progress.report({ increment: 0, message: "Sending request to OpenAI..." });
+            progress.report({ increment: 0, message: `Sending request to OpenAI using ${model}...` });
 
-            // Create optimization prompt
-            const optimizationPrompt = `Improve this prompt to be clearer and more effective. Return ONLY the improved prompt text, no JSON, no explanations, no quotes:
+            // Analyze prompt type and apply smart technique selection
+            const promptAnalysis = analyzePromptType(originalPrompt);
+            const optimizationPrompt = createSmartOptimizationPrompt(originalPrompt, promptAnalysis);
 
-${originalPrompt}`;
-
-            // Call OpenAI API
-            const response = await axios.post('https://api.openai.com/v1/chat/completions', {
-                model: 'gpt-3.5-turbo',
-                messages: [
-                    {
-                        role: 'user',
-                        content: optimizationPrompt
-                    }
-                ],
-                max_tokens: 1000,
-                temperature: 0.7
-            }, {
+            // Call OpenAI API using built-in fetch
+            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${apiKey}`,
                     'Content-Type': 'application/json'
                 },
-                timeout: 30000
+                body: JSON.stringify({
+                    model: model,
+                    messages: [
+                        {
+                            role: 'user',
+                            content: optimizationPrompt
+                        }
+                    ],
+                    max_tokens: 1000,
+                    temperature: 0.7
+                })
             });
 
             progress.report({ increment: 50, message: "Processing response..." });
 
-            const optimizedPrompt = response.data.choices[0].message.content.trim();
+            if (!response.ok) {
+                if (response.status === 401) {
+                    throw new Error('Invalid API key. Please check your OpenAI API key in settings.');
+                } else if (response.status === 429) {
+                    throw new Error('Rate limit exceeded. Please try again later.');
+                } else {
+                    const errorData = await response.json().catch(() => ({})) as any;
+                    throw new Error(`OpenAI API error: ${errorData.error?.message || response.statusText}`);
+                }
+            }
+
+            const data = await response.json() as any;
+            const optimizedPrompt = data.choices[0].message.content.trim();
 
             // Copy to clipboard if enabled
             if (autoCopy) {
@@ -192,17 +272,7 @@ ${originalPrompt}`;
 
     } catch (error) {
         console.error('Error optimizing prompt:', error);
-        if (axios.isAxiosError(error)) {
-            if (error.response?.status === 401) {
-                vscode.window.showErrorMessage('Invalid API key. Please check your OpenAI API key in settings.');
-            } else if (error.response?.status === 429) {
-                vscode.window.showErrorMessage('Rate limit exceeded. Please try again later.');
-            } else {
-                vscode.window.showErrorMessage('OpenAI API error: ' + ((error.response?.data as any)?.error?.message || error.message));
-            }
-        } else {
-            vscode.window.showErrorMessage('Error optimizing prompt: ' + (error instanceof Error ? error.message : String(error)));
-        }
+        vscode.window.showErrorMessage('Error optimizing prompt: ' + (error instanceof Error ? error.message : String(error)));
     }
 }
 

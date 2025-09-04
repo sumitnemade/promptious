@@ -2,6 +2,43 @@
 
 All notable changes to the Promptious Prompt Optimizer extension will be documented in this file.
 
+## [1.0.7] - 2025-01-03
+
+### 🚀 Major Features
+
+- **Status Bar Integration**: Added persistent lightbulb icon in status bar for instant access
+- **Model Selection**: Choose from 5 OpenAI models (GPT-3.5-turbo, GPT-4, GPT-4-turbo-preview, GPT-4o, GPT-4o-mini)
+- **Built-in Fetch API**: Replaced axios with native fetch for better compatibility and smaller package size
+- **Programmatic Settings Access**: Added "Open Settings" command and smart error dialogs
+
+### ✨ New Features
+
+- **Status Bar Lightbulb**: Always-visible lightbulb icon in status bar for quick access
+- **Model Dropdown**: Select preferred OpenAI model with descriptions
+- **Smart Error Handling**: API key errors now show "Open Settings" button
+- **Unrestricted Code Actions**: Lightbulb appears for any text selection (no length limits)
+- **Multiple Access Methods**: Status bar, command palette, context menu, and code actions
+
+### 🔧 Improvements
+
+- **Simplified Dependencies**: Removed axios dependency, using built-in fetch API
+- **Better Error Messages**: More descriptive error handling with actionable buttons
+- **Enhanced Progress Tracking**: Shows selected model in progress messages
+- **Improved Discoverability**: Multiple ways to access optimization features
+
+### 🐛 Bug Fixes
+
+- **Fixed Extension Loading**: Resolved command registration issues
+- **Fixed Activation Events**: Proper extension activation on startup
+- **Fixed TypeScript Errors**: Added proper type annotations for fetch API
+
+### 📋 Settings Added
+
+- `promptious.model`: Choose OpenAI model (default: gpt-3.5-turbo)
+- `promptious.apiKey`: OpenAI API key (required)
+- `promptious.autoCopy`: Auto-copy optimized prompts (default: true)
+- `promptious.showNotifications`: Show success notifications (default: true)
+
 ## [1.0.6] - 2025-01-03
 
 ### 🔧 Command Registration & Status Bar Fix

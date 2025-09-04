@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 suite('Extension Test Suite', () => {
     test('Test extension activation and basic functionality', async () => {
         // Test extension presence and activation
-        const extension = vscode.extensions.getExtension('promptious.promptious-optimizer');
+        const extension = vscode.extensions.getExtension('sumitdev.promptious-optimizer');
         assert.ok(extension);
 
         if (extension) {
@@ -18,9 +18,7 @@ suite('Extension Test Suite', () => {
         const expectedCommands = [
             'promptious.optimizePrompt',
             'promptious.optimizeSelection',
-            'promptious.showHistory',
-            'promptious.configureSettings',
-            'promptious.clearHistory'
+            'promptious.openSettings'
         ];
 
         expectedCommands.forEach(command => {
@@ -33,16 +31,14 @@ suite('Extension Test Suite', () => {
 
         // Test all configuration properties exist and have correct types
         const apiKey = config.get('apiKey');
-        const baseUrl = config.get('baseUrl');
-        const debug = config.get('debug');
-        const defaultTechniques = config.get('defaultTechniques');
-        const autoOptimize = config.get('autoOptimize');
+        const autoCopy = config.get('autoCopy');
+        const showNotifications = config.get('showNotifications');
+        const model = config.get('model');
 
         assert.strictEqual(typeof apiKey, 'string');
-        assert.strictEqual(typeof baseUrl, 'string');
-        assert.strictEqual(typeof debug, 'boolean');
-        assert.ok(Array.isArray(defaultTechniques));
-        assert.strictEqual(typeof autoOptimize, 'boolean');
+        assert.strictEqual(typeof autoCopy, 'boolean');
+        assert.strictEqual(typeof showNotifications, 'boolean');
+        assert.strictEqual(typeof model, 'string');
     });
 
     test('Test status bar item creation', () => {
@@ -193,7 +189,7 @@ This is a test explanation for the optimization.
     });
 
     test('Test extension context operations', () => {
-        const extension = vscode.extensions.getExtension('promptious.promptious-optimizer');
+        const extension = vscode.extensions.getExtension('sumitdev.promptious-optimizer');
         if (extension) {
             assert.ok(extension.id);
             assert.ok(extension.extensionPath);
@@ -356,38 +352,31 @@ ${response.explanation || 'No explanation provided'}
             assert.ok(typeof apiKey === 'string');
         }
 
-        // Test with different base URL scenarios
-        const baseUrl = config.get('baseUrl');
-        if (baseUrl) {
-            // Test branch for configured base URL
-            assert.ok(typeof baseUrl === 'string');
-        }
-
-        // Test with different debug settings
-        const debug = config.get('debug');
-        if (debug) {
-            // Test branch for debug mode
-            assert.strictEqual(debug, false);
+        // Test with different auto-copy settings
+        const autoCopy = config.get('autoCopy');
+        if (autoCopy) {
+            // Test branch for auto-copy enabled
+            assert.strictEqual(autoCopy, true);
         } else {
-            // Test branch for debug mode disabled
-            assert.strictEqual(debug, false);
+            // Test branch for auto-copy disabled
+            assert.strictEqual(autoCopy, true);
         }
 
-        // Test with different techniques
-        const techniques = config.get('defaultTechniques');
-        if (Array.isArray(techniques) && techniques.length > 0) {
-            // Test branch for configured techniques
-            assert.ok(techniques.length > 0);
-        }
-
-        // Test with different auto-optimize settings
-        const autoOptimize = config.get('autoOptimize');
-        if (autoOptimize) {
-            // Test branch for auto-optimize enabled
-            assert.strictEqual(autoOptimize, false);
+        // Test with different notification settings
+        const showNotifications = config.get('showNotifications');
+        if (showNotifications) {
+            // Test branch for notifications enabled
+            assert.strictEqual(showNotifications, true);
         } else {
-            // Test branch for auto-optimize disabled
-            assert.strictEqual(autoOptimize, false);
+            // Test branch for notifications disabled
+            assert.strictEqual(showNotifications, true);
+        }
+
+        // Test with different model settings
+        const model = config.get('model');
+        if (model) {
+            // Test branch for configured model
+            assert.ok(typeof model === 'string');
         }
     });
 });
